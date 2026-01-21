@@ -1,30 +1,29 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Admin Upload</title>
-</head>
-<body>
-  <h2>Admin Upload File</h2>
+<h2>Admin Upload</h2>
+<input type="file" id="file">
+<button onclick="upload()">Upload</button>
 
-  <input type="file" id="file">
-  <button onclick="upload()">Upload</button>
+<script>
+if (!localStorage.getItem("token")) {
+  location.href = "/login.html";
+}
 
-  <script>
-    function upload() {
-      const file = document.getElementById("file").files[0];
-      if (!file) return alert("Chưa chọn file");
+function upload() {
+  const f = file.files[0];
+  const form = new FormData();
+  form.append("file", f);
 
-      const form = new FormData();
-      form.append("file", file);
+  fetch("/api/upload", {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + localStorage.getItem("token")
+    },
+    body: form
+  })
+  .then(r => {
+    if (!r.ok) throw "Not authorized";
+    alert("Upload xong");
+  })
+  .catch(() => alert("Không có quyền"));
+}
+</script>
 
-      fetch("/api/upload", {
-        method: "POST",
-        body: form
-      })
-      .then(res => res.json())
-      .then(() => alert("Upload thành công"));
-    }
-  </script>
-</body>
-</html>
