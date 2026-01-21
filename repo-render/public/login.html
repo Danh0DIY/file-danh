@@ -3,31 +3,45 @@
 <head>
   <meta charset="utf-8">
   <title>Admin Login</title>
+
+  <!-- QUAN TRỌNG: script này tạo biến global "supabase" -->
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <h2>Admin Login</h2>
+
   <input id="email" placeholder="Email"><br>
   <input id="password" type="password" placeholder="Password"><br>
-  <button onclick="login()">Login</button>
+  <button id="loginBtn">Login</button>
 
   <script>
-    const supabase = supabaseJs.createClient(
-      "SUPABASE_URL",
-      "SUPABASE_ANON_KEY"
+    // 🔴 BẮT BUỘC phải là window.supabase
+    const client = window.supabase.createClient(
+      "https://XXXX.supabase.co",      // ← URL THẬT
+      "PUBLIC_ANON_KEY"                // ← ANON KEY
     );
 
-    async function login() {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.value,
-        password: password.value
+    document.getElementById("loginBtn").onclick = async () => {
+      console.log("Login clicked");
+
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+
+      const { data, error } = await client.auth.signInWithPassword({
+        email,
+        password
       });
 
-      if (error) return alert(error.message);
+      if (error) {
+        alert("❌ Login sai: " + error.message);
+        return;
+      }
 
       localStorage.setItem("token", data.session.access_token);
+      alert("✅ Login OK");
       location.href = "/admin.html";
-    }
+    };
   </script>
 </body>
 </html>
+
