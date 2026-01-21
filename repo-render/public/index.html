@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Web học tập</title>
+  <style>
+    body { font-family: Arial; margin: 40px }
+    input, button { margin: 5px }
+    li { margin: 6px 0 }
+  </style>
+</head>
+<body>
+
+<h1>📚 TÀI LIỆU HỌC TẬP</h1>
+
+<ul id="list"></ul>
+
+<hr>
+
+<h2>🔐 Admin đăng nhập</h2>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Đăng nhập</button>
+
+<h2>⬆️ Upload tài liệu (Admin)</h2>
+<input id="title" placeholder="Tên tài liệu">
+<input type="file" id="file">
+<button onclick="upload()">Upload</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+const API = ""; // cùng domain Render
+const supabase = supabaseJs.createClient(
+  "SUPABASE_URL",
+  "SUPABASE_ANON_KEY"
+);
+
+let token = null;
+
+/* load danh sách tài liệu */
+async function load() {
+  const res = await fetch("/api/docs");
+  const data = await res.json();
+  list.innerHTML = data.map(
+    d => `<li>
+      <a href="${d.file_url}" download>${d.title}</a>
+    </li>`
+  ).join("");
+}
+
+/* đăng nhập admin */
+async function login() {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: password.value
+  });
+
+  if (error) {
+    alert("Sai tài khoản");
+    return;
+  }
+
+  token = data.session.access_token;
+  alert("Đăng nhập thành công");
+}
+
+/* upload tài liệu */
+async function upload() {
+  if (!token) {
+    alert("Chưa đăng nhập admin");
+    return;
+  }
+
+  const form = new FormData();
+  form.append("title", title.value);
+  form.append("file", file.files[0]);
+
+  await fetch("/api/upload", {
+    method: "POST",
+    headers: {
+      Authorization: "Bearer " + token
+    },
+    body: form
+  });
+
+  load();
+}
+
+load();
+</script>
+
+</body>
+</html>
