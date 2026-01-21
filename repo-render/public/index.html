@@ -1,17 +1,99 @@
-<h2>Danh sách file</h2>
-<a href="/login.html">🔐 Admin Login</a>
-<hr>
-<ul id="list"></ul>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <title>Danh sách file</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script>
-fetch("/api/files")
-  .then(r => r.json())
-  .then(files => {
-    const list = document.getElementById("list");
-    files.forEach(f => {
-      list.innerHTML += `
-        <li>${f.name} <a href="${f.url}" download>⬇</a></li>
-      `;
-    });
-  });
-</script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin-bottom: 10px;
+    }
+    button {
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 15px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📂 Danh sách file</h2>
+  <a href="/login.html">🔐 Admin Login</a>
+  <hr>
+
+  <ul id="list"></ul>
+  <p id="status"></p>
+
+  <script>
+    const listEl = document.getElementById("list");
+    const statusEl = document.getElementById("status");
+
+    // 🔽 ÉP TẢI FILE (KHÔNG MỞ TAB)
+    async function downloadFile(url, filename) {
+      try {
+        statusEl.innerText = "⏳ Đang tải file...";
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Không tải được file");
+
+        const blob = await res.blob();
+        const a = document.createElement("a");
+
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        URL.revokeObjectURL(a.href);
+        statusEl.innerText = "✅ Tải xong";
+      } catch (err) {
+        console.error(err);
+        statusEl.innerText = "❌ Lỗi khi tải file";
+      }
+    }
+
+    // 📥 LẤY DANH SÁCH FILE TỪ SERVER
+    fetch("/api/files")
+      .then(res => res.json())
+      .then(files => {
+        if (!files.length) {
+          listEl.innerHTML = "<li>Không có file nào</li>";
+          return;
+        }
+
+        files.forEach(f => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            ${f.name}
+            <button>⬇ Tải</button>
+          `;
+
+          li.querySelector("button").onclick = () => {
+            downloadFile(f.url, f.name);
+          };
+
+          listEl.appendChild(li);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        statusEl.innerText = "❌ Không tải được danh sách file";
+      });
+  </script>
+
+</body>
+</html>
